@@ -11,7 +11,7 @@ jobs:
     timeout-minutes: 5
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Setup Python
@@ -29,5 +29,5 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           MELON_COOKIE: ${{ secrets.MELON_COOKIE }}
 
-      - name: Show workflow run time
+      - name: Show workflow time
         run: echo "✅ Workflow ran at $(date)"
