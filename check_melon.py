@@ -55,4 +55,17 @@ def fetch_seat_info():
     found = False
     for item in summary:
         cnt = item.get("realSeatCnt") or item.get("realSeatCntlk", 0)
-        area = f'{item.get("floorName","")}-{item.get("areaName","")}'
+        area = f'{item.get("floorName","")}-{item.get("areaName","")}'.strip("-")
+        if cnt > 0:
+            lines.append(f"✅ {area}：{cnt} 張可售")
+            found = True
+
+    if not found:
+        lines.append("❌ 目前無可售座位區")
+
+    message = "\n".join(lines)
+    print(message)
+    send_telegram_message(message)
+
+if __name__ == "__main__":
+    fetch_seat_info()
