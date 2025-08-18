@@ -8,10 +8,10 @@ on:
 jobs:
   check-melon:
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 5
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Setup Python
@@ -28,6 +28,6 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           MELON_COOKIE: ${{ secrets.MELON_COOKIE }}
-      - name: Show workflow time
-        run: echo "✅ Workflow ran at $(date)"
 
+      - name: Show workflow run time
+        run: echo "✅ Workflow ran at $(date)"
