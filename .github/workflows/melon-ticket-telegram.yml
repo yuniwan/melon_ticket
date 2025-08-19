@@ -1,36 +1,14 @@
-name: Check Melon Ticket
-
-on:
-  schedule:
-    - cron: '*/5 * * * *'   # 每 5 分鐘查一次
-  workflow_dispatch:
-
 jobs:
-  check-ticket:
+  check-melon:
     runs-on: ubuntu-latest
     steps:
-      - name: Run melon-ticket-actions (Official)
-        id: melon
+      - uses: actions/checkout@v3
+
+      - name: Run melon-ticket-actions
         uses: mooyoul/melon-ticket-actions@v1.1.5
         with:
           product-id: 211510
           schedule-id: 100001
           seat-id: 1_0
-
-      - name: Notify Telegram (FLOOR only, if available)
-        if: always()
-        run: |
-          RAW_JSON='${{ steps.melon.outputs.result }}'
-
-          # 過濾只要 FLOOR 區域，並且 count > 0
-          FLOOR_DATA=$(echo "$RAW_JSON" | jq -r '.data[] | select(.areaName | test("FLOOR"; "i") and (.count > 0)) | "\(.areaName): 剩餘 \(.count) 張"')
-
-          if [ -n "$FLOOR_DATA" ]; then
-            RESULT="🎫 FLOOR 區域有票啦！\n$FLOOR_DATA"
-            
-            curl -s "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
-              -d "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
-              -d "text=$RESULT"
-          else
-            echo "❌ 沒有 FLOOR 區域票，不通知 Telegram"
-          fi
+          slack-incoming-webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          message: "🎫 Melon 有票啦！快搶！"
