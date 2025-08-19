@@ -1,1 +1,9 @@
+- name: Check Melon Ticket Floors
+  uses: ./         # 指向根目錄的 action.yml
+  with:
+    product-id: '211510'
+    schedule-id: '100001'
+    floor-ids: 'Floor A, Floor B, Floor C'
+    slack-webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+    message: '🚀 演唱會餘票速報!'
 
