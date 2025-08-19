@@ -1,14 +1,26 @@
+name: Test Slack & Melon Ticket Actions
+
+on:
+  workflow_dispatch:  # 可手動觸發測試
+
 jobs:
-  check-melon:
+  test-slack:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Test Slack webhook
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+          --data '{"text":"✅ 測試成功：這是一則測試訊息"}' \
+          ${{ secrets.SLACK_WEBHOOK_URL }}
 
-      - name: Run melon-ticket-actions
+  test-melon-action:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run melon-ticket-actions (test)
         uses: mooyoul/melon-ticket-actions@v1.1.5
         with:
           product-id: 211510
           schedule-id: 100001
-          seat-id: 1_0
+          seat-id: test_9999          # 用不存在的座位測試
           slack-incoming-webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
-          message: "🎫 Melon 有票啦！快搶！"
+          message: "🚀 測試通知 - Slack webhook OK"
