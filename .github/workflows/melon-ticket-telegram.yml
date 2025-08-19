@@ -1,33 +1,36 @@
-name: Check Melon Tickets to Telegram
+name: Check Melon Ticket
 
 on:
   schedule:
-    - cron: '*/5 * * * *'  # 每5分鐘執行一次
-  workflow_dispatch:        # 可手動觸發
+    - cron: '*/5 * * * *'   # 每 5 分鐘查一次
+  workflow_dispatch:
 
 jobs:
-  check-melon:
+  check-ticket:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - name: Run melon-ticket-actions (Official)
+        id: melon
+        uses: mooyoul/melon-ticket-actions@v1.1.5
         with:
-          python-version: 3.11
+          product-id: 211510
+          schedule-id: 100001
+          seat-id: 1_0
 
-      - name: Install dependencies
-        run: pip install requests
+      - name: Notify Telegram (FLOOR only, if available)
+        if: always()
+        run: |
+          RAW_JSON='${{ steps.melon.outputs.result }}'
 
-      - name: Run seat checker
-        run: python check_melon.py
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          MELON_COOKIE: ${{ secrets.MELON_COOKIE }}
+          # 過濾只要 FLOOR 區域，並且 count > 0
+          FLOOR_DATA=$(echo "$RAW_JSON" | jq -r '.data[] | select(.areaName | test("FLOOR"; "i") and (.count > 0)) | "\(.areaName): 剩餘 \(.count) 張"')
 
-      - name: Show workflow time
-        run: echo "✅ Workflow ran at $(date)"
+          if [ -n "$FLOOR_DATA" ]; then
+            RESULT="🎫 FLOOR 區域有票啦！\n$FLOOR_DATA"
+            
+            curl -s "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+              -d "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
+              -d "text=$RESULT"
+          else
+            echo "❌ 沒有 FLOOR 區域票，不通知 Telegram"
+          fi
