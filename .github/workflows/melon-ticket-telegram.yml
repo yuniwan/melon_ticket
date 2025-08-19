@@ -1,22 +1,22 @@
-name: 'Melon Ticket Multi-Floor Checker'
-description: 'Check ticket availability for multiple floors in a Melon Ticket event and send Slack notification.'
-inputs:
-  product-id:
-    description: 'The product ID of the event'
-    required: true
-  schedule-id:
-    description: 'The schedule ID of the event'
-    required: true
-  floor-ids:
-    description: 'Comma-separated list of floor names or IDs to check'
-    required: true
-  slack-webhook-url:
-    description: 'Slack Incoming Webhook URL for notifications'
-    required: true
-  message:
-    description: 'Custom message to send with the notification'
-    required: false
-    default: 'Tickets are available!'
-runs:
-  using: 'node16'
-  main: 'index.js'
+name: Check Melon Ticket Multi-Floor
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'  # 每 5 分鐘跑一次
+  workflow_dispatch:
+
+jobs:
+  check-ticket:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Check Melon Ticket Floors
+        uses: ./melon-ticket-floor-action
+        with:
+          product-id: '211510'
+          schedule-id: '100001'
+          floor-ids: 'Floor A, Floor B, Floor C'
+          slack-webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          message: '🚀 演唱會餘票速報!'
