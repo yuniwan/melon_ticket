@@ -1,60 +1,22 @@
-name: Melon Ticket Checker
-
-on:
-  schedule:
-    - cron: '0 * * * *'  # 每小時執行一次
-  workflow_dispatch:
-
-jobs:
-  check-tickets:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
-
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-
-      - name: Install dependencies
-        run: pip install requests
-
-      - name: Check Melon tickets
-        env:
-          MELON_COOKIE: ${{ secrets.MELON_COOKIE }}
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-        run: |
-          python - <<'EOF'
-          import os
-          import requests
-          import json
-
-          url = "https://tkglobal.melon.com/tktapi/product/seat/seatMapList.json"
-          params = {
-              "prodId": "211510",
-              "scheduleNo": "100001",
-              "callback": "dummy"
-          }
-          headers = {
-              "Cookie": os.environ['MELON_COOKIE'],
-              "User-Agent": "Mozilla/5.0"
-          }
-
-          r = requests.get(url, params=params, headers=headers)
-          data_text = r.text
-          # 去掉 callback 包裝
-          data_json = json.loads(data_text[data_text.find("(")+1:data_text.rfind(")")])
-          message_lines = []
-          for floor in data_json.get('floorList', []):
-              available = floor.get('availableSeat', 0)
-              if available > 0:
-                  message_lines.append(f"{floor['floorName']} 剩餘票數: {available}")
-
-          if message_lines:
-              message = "\n".join(message_lines)
-              webhook = os.environ['SLACK_WEBHOOK_URL']
-              requests.post(webhook, json={"text": message})
-          else:
-              print("目前無票")
-          EOF
+name: 'Melon Ticket Multi-Floor Checker'
+description: 'Check ticket availability for multiple floors in a Melon Ticket event and send Slack notification.'
+inputs:
+  product-id:
+    description: 'The product ID of the event'
+    required: true
+  schedule-id:
+    description: 'The schedule ID of the event'
+    required: true
+  floor-ids:
+    description: 'Comma-separated list of floor names or IDs to check'
+    required: true
+  slack-webhook-url:
+    description: 'Slack Incoming Webhook URL for notifications'
+    required: true
+  message:
+    description: 'Custom message to send with the notification'
+    required: false
+    default: 'Tickets are available!'
+runs:
+  using: 'node16'
+  main: 'index.js'
